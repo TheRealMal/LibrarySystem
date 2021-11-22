@@ -11,3 +11,5 @@ npm install
 ```sh
 node main.js
 ```
+
+http://localhost:8080/
