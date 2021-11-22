@@ -6,9 +6,9 @@ var http = require('http')
 var path = require('path')
 var fs = require('fs')
 
-const booksPath = 'private/books.json'
-const customersPath = 'private/customers.json'
-const stuffPath = 'private/stuff.json'
+const booksPath = 'private/json/books.json'
+const customersPath = 'private/json/customers.json'
+const stuffPath = 'private/json/stuff.json'
 
 function loadData(path){
     let rawdata = fs.readFileSync(path)
@@ -21,7 +21,9 @@ function writeData(path, data){
 
 function parseIds(arr, books){
     for (let i = 0; i < arr.length; ++i){
-        arr[i] = books.ids[arr[i]]
+        let id = arr[i];
+        arr[i] = books.ids[id]
+        arr[i]["id"] = id
     }
     return arr
 }
