@@ -57,7 +57,6 @@ function searchByAuthor(input){
                 resultAppend = false
             }
         }
-        console.log(resultAppend)
         if (resultAppend){
             for (let i = 0; i < books.authors[firstChar][key].length; ++i){
                 result.push(books.authors[firstChar][key][i]["id"])
@@ -70,17 +69,31 @@ function searchByAuthor(input){
 // Add new book to database
 function addBookToDB(author, name, quantity, bookId){
     var books = loadData(booksPath)
+
     // Add book to authors part
-    const firstCharAuthor = author.charAt(0).toUpperCase()
-    const booksByAuthor = books.authors[firstCharAuthor][author.toLowerCase()]
+    var firstCharsAuthor = author.split(' ')
+    var booksByAuthor = undefined
+    firstCharsAuthor.forEach(part => {
+        part = part.charAt(0).toUpperCase()
+        if (typeof books.authors[part][author.toLowerCase()] !== undefined){
+            booksByAuthor = books.authors[part][author.toLowerCase()]
+        }
+    })
     if (typeof booksByAuthor === "undefined"){
-        books.authors[firstCharAuthor][author.toLowerCase()] = []
+        firstCharsAuthor.forEach(letter => {
+            books.authors[letter][author.toLowerCase()] = []
+        })
     }
-    books.authors[firstCharAuthor][author.toLowerCase()].push({"name":name, "id":bookId})
+    firstCharsAuthor.forEach(letter => {
+        books.authors[letter][author.toLowerCase()].push({"name":name, "id":bookId})
+    })
 
     // Add book to names part
-    const firstCharName = name.charAt(0).toUpperCase()
-    books.names[firstCharName][name.toLowerCase() + " " + author.toLowerCase()] = {"id":bookId}
+    var firstCharsName = author.split(' ')
+    firstCharsName.forEach(part => {
+        part = part.charAt(0).toUpperCase()
+        books.names[part][name.toLowerCase() + " " + author.toLowerCase()] = {"id":bookId}  
+    })
 
     // Add book to ids part
     books.ids[bookId] = {
@@ -94,22 +107,19 @@ function addBookToDB(author, name, quantity, bookId){
 // Add new customer to database
 function registerCustomer(fio){
     var customers = loadData(customersPath)
-    customers.push({
-        "name": fio,
+    customers[fio.toLowerCase()] = {
         "booksCount": 0,
         "books": []
-    })
+    }
     writeData(customersPath, customers)
 }
 
 // Search customer in database
 function searchCustomer(fio, customers){
-    for (var i = 0; i < customers.length; ++i){
-        if (customers[i]["name"].toLowerCase() === fio.toLowerCase()){
-            return i;
-        }
+    if (typeof customers[fio.toLowerCase()] !== undefined){
+        return customers[fio.toLowerCase()]
     }
-    return -1;
+    return undefined
 }
 
 // Take book and add it to customer backpack
@@ -158,7 +168,7 @@ function backBook(bookId, fio){
 
 const app = express()
 
-app.set('views', path.join(__dirname+'/templates'));
+app.set('views', path.join(__dirname+'/private/ejs'));
 app.set('view engine', 'ejs');
 
 app.use(session({
@@ -178,11 +188,65 @@ app.get('/', (req, res) => {
     res.status(200).sendFile(path.join(__dirname + '/private/index.html'))
 })
 
+app.get('/dashboard/login', (req, res) => {
+    res.status(200).sendFile(path.join(__dirname + '/private/dashboardAuth.html'))
+})
+
+app.post('/dashboard/login', (req, res) => {
+    var customerFio = req.body.fio
+    if (customerFio === "deauthCustomer"){
+        req.session.student = undefined
+        return res.sendStatus(205)
+    }
+    var customers = loadData(customersPath)
+    var customer = searchCustomer(customerFio, customers)
+    if (typeof customer !== "undefined"){
+        req.session.student = customerFio
+        return res.sendStatus(200)
+    }
+    res.sendStatus(404)
+})
+
 app.get('/dashboard', (req, res) => {
+    if (typeof req.session.student === "undefined"){
+        return res.redirect(302, '/dashboard/login')
+    }
     res.status(200).sendFile(path.join(__dirname + '/private/dashboard.html'))
 })
 
+app.get('/student', (req, res) => {
+    if (typeof req.session.student === "undefined"){
+        return res.redirect(302, '/dashboard/login')
+    }
+    var customers = loadData(customersPath)
+    var customer = searchCustomer(req.session.student, customers)
+    if (customer["books"] !== []){
+        var books = loadData(booksPath)
+        customer["books"] = parseIds(customer["books"], books)
+    }
+    customer["name"] = req.session.student
+    res.status(200).json(customer)
+})
+
+app.get('/admin/login', (req, res) => {
+    res.status(200).sendFile(path.join(__dirname + '/private/adminAuth.html'))
+})
+
+app.post('/admin/login', (req, res) => {
+    var stuffKey = req.body.key
+    var stuffs = loadData(stuffPath)
+    if (stuffs.includes(stuffKey)){
+        req.session.stuffKey = stuffKey
+        return res.sendStatus(200)
+    }
+    res.sendStatus(404)
+})
+
 app.get('/admin', (req, res) => {
+    if (typeof req.session.stuffKey === "undefined"){
+        return res.redirect(302, '/admin/login')
+    }
+    var stuffs = loadData(stuffPath)
     res.status(200).sendFile(path.join(__dirname + '/private/admin.html'))
 })
 
