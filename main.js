@@ -219,7 +219,6 @@ app.get('/student', (req, res) => {
     let customer = customers[req.session.student.toLowerCase()]
     if (customer["books"] !== []){
         var books = loadData(booksPath)
-        console.log(customer["books"])
         customer["books"] = parseIds(customer["books"], books)
     }
     customer["name"] = req.session.student
