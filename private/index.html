@@ -47,8 +47,8 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
     <script type="application/javascript">
-      function createLine(name, id){
-        document.querySelector("#booksTable").innerHTML += `<div class="row input-group" style="margin-bottom:10px;"><span class="input-group-text col-sm-10">${name}</span><button class="col-sm-2 btn btn-primary" type="button" id="searchButton" value="${id}">Взять</button></div>`
+      function createLine(name, id, q){
+        document.querySelector("#booksTable").innerHTML += `<div class="row input-group" style="margin-bottom:10px;"><span class="input-group-text col-sm-10" id="${id}">${name}</span><button class="col-sm-2 btn btn-primary" type="button" id="takeButton" value="${id}" onclick="takeBook(this);">Взять</button></div>`
       }
 
       document.querySelector("#searchButton").addEventListener('click', function (){
@@ -59,10 +59,25 @@
         .then(data => {
           document.querySelector("#booksTable").innerHTML = ""
           data["data"].forEach(book => {
-            createLine(`${book.author} "${book.name}" | В наличии ${book.quantity} шт.`, book.id)
+            createLine(`${book.author} "${book.name}" | В наличии ${book.quantity} шт.`, book.id, book.quantity)
           })
         })
       })
+
+      function takeBook(el){
+        fetch(`/books/take/${el.value}`, {
+          method: 'POST'
+        })
+        .then(response => {
+          if (response.status === 302){
+            window.location.href = "/dashboard/login"
+          } else if (response.status == 200){
+            let lineEl = document.querySelector(`span#${el.value}`)
+            let elQ = parseInt(lineEl.textContent.split('В наличии')[1].split(' шт.')[0])
+            lineEl.textContent = lineEl.textContent.replace(`В наличии ${elQ}`, `В наличии ${elQ-1}`)
+          }
+        })
+      }
     </script>
   </body>
 </html>

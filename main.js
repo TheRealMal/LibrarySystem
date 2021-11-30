@@ -117,19 +117,18 @@ function registerCustomer(fio){
 // Search customer in database
 function searchCustomer(fio, customers){
     if (typeof customers[fio.toLowerCase()] !== undefined){
-        return customers[fio.toLowerCase()]
+        return fio.toLowerCase()
     }
-    return undefined
+    return -1
 }
 
 // Take book and add it to customer backpack
-// If customer not rigestered -> autoregs him
 function takeBook(bookId, fio){
     var customers = loadData(customersPath)
     var books = loadData(booksPath)
     const customerId = searchCustomer(fio, customers)
-    if (customerId === -1){
-        registerCustomer(fio)
+    if (customerId === -1 || typeof books.ids[bookId] === undefined){
+        return false
     }
     if (books.ids[bookId]["quantity"] == 0){
         return false
@@ -137,30 +136,28 @@ function takeBook(bookId, fio){
     customers[customerId]["booksCount"] += 1
     customers[customerId]["books"].push(bookId)
     books.ids[bookId]["quantity"] -= 1
-
     writeData(customersPath, customers)
     writeData(booksPath, books)
     return true
 }
 
 // Bring book back to database
-function backBook(bookId, fio){
+function returnBook(bookId, fio){
     var customers = loadData(customersPath)
     var books = loadData(booksPath)
     const customerId = searchCustomer(fio, customers)
-    if (customerId === -1){
+    if (customerId === -1 || typeof books.ids[bookId] === undefined){
         return false
     }
     if (customers[customerId][books].includes(bookId)){
         customers[customerId][books] = customers[customerId][books].filter(function(value, index, arr){ 
             return value != bookId;
         });
+        customers[customerId][booksCount] -= 1
+        books.ids[bookId]["quantity"] += 1
+        writeData(customersPath, customers)
+        writeData(booksPath, books)
     }
-    customers[customerId][booksCount] -= 1
-    books.ids[bookId]["quantity"] += 1
-
-    writeData(customersPath, customers)
-    writeData(booksPath, books)
     return true
 }
 
@@ -219,9 +216,10 @@ app.get('/student', (req, res) => {
         return res.redirect(302, '/dashboard/login')
     }
     var customers = loadData(customersPath)
-    var customer = searchCustomer(req.session.student, customers)
+    let customer = customers[req.session.student.toLowerCase()]
     if (customer["books"] !== []){
         var books = loadData(booksPath)
+        console.log(customer["books"])
         customer["books"] = parseIds(customer["books"], books)
     }
     customer["name"] = req.session.student
@@ -260,6 +258,28 @@ app.get('/books', (req, res) => {
         result = searchByAuthor(query)
     }
     res.status(200).json({status: '200', data: result})
+})
+
+app.post('/books/take/:bookId', (req, res) => {
+    if (typeof req.session.student === "undefined"){
+        return res.status(302).json({status: '302', message: 'Log in to continue'})
+    }
+    if (takeBook(req.params.bookId, req.session.student)){
+        res.status(200).json({status: '200', message: `Book ${req.params.bookId} is successfully taken`}) 
+    } else {
+        res.status(404).json({status: '404', message: 'Something went wrong while taking'})
+    }
+})
+
+app.post('/books/return/:bookId', (req, res) => {
+    if (typeof req.session.student === "undefined"){
+        return res.status(302).json({status: '302', message: 'Log in to continue'})
+    }
+    if (returnBook(req.params.bookId, req.session.student)){
+        res.status(200).json({status: '200', message: `Book ${req.params.bookId} is successfully returned`}) 
+    } else {
+        res.status(404).json({status: '404', message: 'Something went wrong while returning'})
+    }
 })
 
 app.use((req, res, next)=>{
