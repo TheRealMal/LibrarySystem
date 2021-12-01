@@ -75,7 +75,7 @@ function addBookToDB(author, name, quantity, bookId){
     var booksByAuthor = undefined
     firstCharsAuthor.forEach(part => {
         part = part.charAt(0).toUpperCase()
-        if (typeof books.authors[part][author.toLowerCase()] !== undefined){
+        if (typeof books.authors[part][author.toLowerCase()] !== "undefined"){
             booksByAuthor = books.authors[part][author.toLowerCase()]
         }
     })
@@ -116,7 +116,8 @@ function registerCustomer(fio){
 
 // Search customer in database
 function searchCustomer(fio, customers){
-    if (typeof customers[fio.toLowerCase()] !== undefined){
+    console.log(customers[fio.toLowerCase()])
+    if (typeof customers[fio.toLowerCase()] !== "undefined"){
         return fio.toLowerCase()
     }
     return -1
@@ -127,7 +128,7 @@ function takeBook(bookId, fio){
     var customers = loadData(customersPath)
     var books = loadData(booksPath)
     const customerId = searchCustomer(fio, customers)
-    if (customerId === -1 || typeof books.ids[bookId] === undefined){
+    if (customerId === -1 || typeof books.ids[bookId] === "undefined"){
         return false
     }
     if (books.ids[bookId]["quantity"] == 0){
@@ -146,14 +147,13 @@ function returnBook(bookId, fio){
     var customers = loadData(customersPath)
     var books = loadData(booksPath)
     const customerId = searchCustomer(fio, customers)
-    if (customerId === -1 || typeof books.ids[bookId] === undefined){
+    if (customerId === -1 || typeof books.ids[bookId] === "undefined"){
         return false
     }
-    if (customers[customerId][books].includes(bookId)){
-        customers[customerId][books] = customers[customerId][books].filter(function(value, index, arr){ 
-            return value != bookId;
-        });
-        customers[customerId][booksCount] -= 1
+    let bookIndex = customers[customerId]["books"].indexOf(bookId);
+    if (bookIndex > -1){
+        customers[customerId]["books"].splice(bookIndex, 1)
+        customers[customerId]["booksCount"] -= 1
         books.ids[bookId]["quantity"] += 1
         writeData(customersPath, customers)
         writeData(booksPath, books)
@@ -197,11 +197,15 @@ app.post('/dashboard/login', (req, res) => {
     }
     var customers = loadData(customersPath)
     var customer = searchCustomer(customerFio, customers)
-    if (typeof customer !== "undefined"){
+    console.log(customer)
+    if (customer !== -1){
+        req.session.student = customerFio
+        return res.sendStatus(200)
+    } else {
+        registerCustomer(customerFio)
         req.session.student = customerFio
         return res.sendStatus(200)
     }
-    res.sendStatus(404)
 })
 
 app.get('/dashboard', (req, res) => {

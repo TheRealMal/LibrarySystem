@@ -33,7 +33,7 @@
       <h4 class="text-secondary">by therealmal</h4>
       <div class="input-group mb-3">
         <input type="text" class="form-control" placeholder="Введите название/автора книги" aria-label="Book name" id="searchQuery">
-        <button class="btn btn-primary" type="button" id="searchButton">Искать</button>
+        <button class="btn btn-primary" type="submit" id="searchButton">Искать</button>
       </div>
       <div class="btn-group" role="group" aria-label="Search by radio" id="searchType">
         <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" value="name" checked>
@@ -63,7 +63,12 @@
           })
         })
       })
-
+      document.querySelector("#searchQuery").addEventListener("keyup", function(event) {
+        if (event.keyCode === 13) {
+          event.preventDefault();
+          document.querySelector("#searchButton").click();
+        }
+      });
       function takeBook(el){
         fetch(`/books/take/${el.value}`, {
           method: 'POST'
@@ -71,7 +76,7 @@
         .then(response => {
           if (response.status === 302){
             window.location.href = "/dashboard/login"
-          } else if (response.status == 200){
+          } else if (response.status === 200){
             let lineEl = document.querySelector(`span#${el.value}`)
             let elQ = parseInt(lineEl.textContent.split('В наличии')[1].split(' шт.')[0])
             lineEl.textContent = lineEl.textContent.replace(`В наличии ${elQ}`, `В наличии ${elQ-1}`)

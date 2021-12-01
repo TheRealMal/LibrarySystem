@@ -76,8 +76,29 @@
           },
         }).then(response => response.status)
         .then(status => {
-          if (status == 205){
+          if (status === 205){
             window.location.href = "/dashboard/login"
+          }
+        })
+      })
+      document.querySelector("#returnButton").addEventListener('click', function(){
+        var bookId = document.querySelector("#booksSelect").value
+        fetch(`/books/return/${bookId}`, {
+          method: 'POST'
+        })
+        .then(response => {
+          if (response.status === 302){
+            window.location.href = "/dashboard/login"
+          } else if (response.status === 200){
+            let bookQel = document.querySelector("#customerBooksQ")
+            let bookQ = parseInt(bookQel.textContent.split('Вы взяли ')[1].split(' книг')[0])
+            bookQel.textContent = bookQel.textContent.replace(`${bookQ}`, `${bookQ-1}`)
+            let selectobject = document.querySelector("#booksSelect")
+            for (var i=0; i < selectobject.length; i++) {
+                if (selectobject.options[i].value === bookId){
+                  selectobject.remove(i)
+                }
+            }
           }
         })
       })
