@@ -247,7 +247,6 @@ app.get('/admin', (req, res) => {
     if (typeof req.session.stuffKey === "undefined"){
         return res.redirect(302, '/admin/login')
     }
-    var stuffs = loadData(stuffPath)
     res.status(200).sendFile(path.join(__dirname + '/private/admin.html'))
 })
 
@@ -261,6 +260,21 @@ app.get('/books', (req, res) => {
         result = searchByAuthor(query)
     }
     res.status(200).json({status: '200', data: result})
+})
+
+app.get('/takenBooks', (req, res) => {
+    if (typeof req.session.stuffKey === "undefined"){
+        return res.redirect(302, '/admin/login')
+    }
+    var takenBooks = {}
+    var customers = loadData(customersPath)
+    var books = loadData(booksPath)
+    Object.keys(customers).forEach(key => {
+        if (customers[key]["booksCount"] > 0){
+            takenBooks[key] = parseIds(customers[key]["books"], books)
+        }
+    });
+    res.status(200).json({status: '200', data: takenBooks})
 })
 
 app.post('/books/take/:bookId', (req, res) => {

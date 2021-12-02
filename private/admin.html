@@ -12,6 +12,8 @@
         margin-top: 1%;
         margin-bottom: 100px;
       }
+      .tableFixHead          { overflow: auto; height: 350px; }
+      .tableFixHead thead th { position: sticky; top: 0; z-index: 1; }
     </style>
   </head>
   <body>
@@ -28,6 +30,52 @@
         <a class="nav-link active disabled" aria-current="page" href="/admin">Админ</a>
       </li>
     </ul>
+    <div class="container">
+      <div class="row">
+        <div class="col" id="takenBooksCol">
+          <p class="fs-5">Список должников</p>
+          <div class="tableFixHead rounded-3">
+            <table class="table table-striped table-borderless">
+              <thead class="table-danger">
+                <tr>
+                  <th scope="col">Название книги</th>
+                  <th scope="col">ФИО</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col" id="addNewBookCol">
+          
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script type="application/javascript">
+      function titleCase(str) {
+        var splitStr = str.toLowerCase().split(' ');
+        for (var i = 0; i < splitStr.length; i++) {
+            splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);     
+        }
+        return splitStr.join(' '); 
+      }
+
+      window.onload = () => {
+        fetch(`/takenBooks`)
+        .then(response => response.json())
+        .then(data => {
+          if (Object.keys(data["data"]).length > 0){
+            Object.keys(data["data"]).forEach(customerKey => {
+              data["data"][customerKey].forEach(book => {
+                let fioCol = titleCase(customerKey)
+                document.querySelector("tbody").innerHTML += `<tr><td>${book["author"]} - "${book["name"]}"</td><td>${fioCol}</td></tr>`
+              })
+            })
+          }
+        })
+      }
+    </script>
   </body>
 </html>
