@@ -116,7 +116,6 @@ function registerCustomer(fio){
 
 // Search customer in database
 function searchCustomer(fio, customers){
-    console.log(customers[fio.toLowerCase()])
     if (typeof customers[fio.toLowerCase()] !== "undefined"){
         return fio.toLowerCase()
     }
@@ -197,7 +196,6 @@ app.post('/dashboard/login', (req, res) => {
     }
     var customers = loadData(customersPath)
     var customer = searchCustomer(customerFio, customers)
-    console.log(customer)
     if (customer !== -1){
         req.session.student = customerFio
         return res.sendStatus(200)
