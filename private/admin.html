@@ -28,7 +28,11 @@
       <li class="nav-item">
         <a class="nav-link active disabled" aria-current="page" href="/admin">Админ</a>
       </li>
+      <li class="nav-item d-flex ms-auto">
+        <a class="nav-link text-danger" id="unlogButton">Выйти</a>
+      </li>
     </ul>
+    
     <div class="container">
       <div class="row">
         <div class="col" id="takenBooksCol">
@@ -47,7 +51,27 @@
           </div>
         </div>
         <div class="col" id="addNewBookCol">
-          
+          <p class="fs-5">Добавить новую книгу</p>
+          <div class="mb-3">
+            <label for="bookAuthor" class="form-label">Автор</label>
+            <input type="text" class="form-control" id="bookAuthor" placeholder="Иван Иванов">
+          </div>
+          <div class="mb-3">
+            <label for="bookName" class="form-label">Название</label>
+            <input type="text" class="form-control" id="bookName" placeholder="Золотая рыбка">
+          </div>
+          <div class="mb-3">
+            <label for="bookQ" class="form-label">Количество</label>
+            <input type="number" class="form-control" id="bookQ" placeholder="0">
+          </div>
+          <div class="input-group mb-3">
+            <div class="input-group-text">
+              <input class="form-check-input mt-0" type="checkbox" value="">
+            </div>
+            <span class="input-group-text">ID</span>
+            <input type="text" class="form-control" id="bookId">
+          </div>
+          <button type="button" class="btn btn-primary" id="addBookButton">Добавить</button>
         </div>
       </div>
     </div>
