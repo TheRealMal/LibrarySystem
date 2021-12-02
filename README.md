@@ -12,5 +12,6 @@ node main.js
 
 http://localhost:8080/
 
+## Страницы
+###### Главная страница
 ![index.html](demo/index.png)
-*Главная страница*
