@@ -15,3 +15,15 @@ http://localhost:8080/
 ## Страницы
 ###### Главная страница
 ![index.html](demo/index.png)
+
+###### Страница авторизация пользователя
+![index.html](demo/dashLogin.png)
+
+###### Страница пользователя
+![index.html](demo/dash.png)
+
+###### Страница авторизация администратора
+![index.html](demo/adminLogin.png)
+
+###### Страница администратора
+![index.html](demo/admin.png)
