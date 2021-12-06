@@ -66,10 +66,32 @@ function searchByAuthor(input){
     return parseIds(result, books)
 }
 
+function makeid(books){
+    var result           = 'TRM-'
+    var characters       = '0123456789'
+    var charactersLength = characters.length
+    for (var i = 0; i < 3; i++ ){
+        result += characters.charAt(Math.floor(Math.random() * charactersLength))
+    }
+    result += "-"
+    for (var i = 0; i < 10; i++ ){
+        result += characters.charAt(Math.floor(Math.random() * charactersLength))
+    }
+    if (books["ids"].includes(result)){ 
+        return makeid(books)
+    }
+    return result
+}
+
 // Add new book to database
 function addBookToDB(author, name, quantity, bookId){
     var books = loadData(booksPath)
-
+    if (author === "" || name === "" || quantity === 0){
+        return false
+    }
+    if (bookId === "undefined"){
+        bookdId = makeid(books)
+    }
     // Add book to authors part
     var firstCharsAuthor = author.split(' ')
     var booksByAuthor = undefined
@@ -81,15 +103,15 @@ function addBookToDB(author, name, quantity, bookId){
     })
     if (typeof booksByAuthor === "undefined"){
         firstCharsAuthor.forEach(letter => {
-            books.authors[letter][author.toLowerCase()] = []
+            books.authors[letter.charAt(0).toUpperCase()][author.toLowerCase()] = []
         })
     }
     firstCharsAuthor.forEach(letter => {
-        books.authors[letter][author.toLowerCase()].push({"name":name, "id":bookId})
+        books.authors[letter.charAt(0).toUpperCase()][author.toLowerCase()].push({"name":name, "id":bookId})
     })
 
     // Add book to names part
-    var firstCharsName = author.split(' ')
+    var firstCharsName = `${name} ${author}`.split(' ')
     firstCharsName.forEach(part => {
         part = part.charAt(0).toUpperCase()
         books.names[part][name.toLowerCase() + " " + author.toLowerCase()] = {"id":bookId}  
@@ -102,6 +124,7 @@ function addBookToDB(author, name, quantity, bookId){
         "quantity": quantity
     }
     writeData(booksPath, books)
+    return true
 }
 
 // Add new customer to database
@@ -149,7 +172,7 @@ function returnBook(bookId, fio){
     if (customerId === -1 || typeof books.ids[bookId] === "undefined"){
         return false
     }
-    let bookIndex = customers[customerId]["books"].indexOf(bookId);
+    let bookIndex = customers[customerId]["books"].indexOf(bookId)
     if (bookIndex > -1){
         customers[customerId]["books"].splice(bookIndex, 1)
         customers[customerId]["booksCount"] -= 1
@@ -294,6 +317,18 @@ app.post('/books/return/:bookId', (req, res) => {
         res.status(200).json({status: '200', message: `Book ${req.params.bookId} is successfully returned`}) 
     } else {
         res.status(404).json({status: '404', message: 'Something went wrong while returning'})
+    }
+})
+
+app.post('/books/add', (req, res) => {
+    if (typeof req.session.stuffKey === "undefined"){
+        return res.status(302).json({status: '302', message: 'Log in to continue'})
+    }
+
+    if (addBookToDB(req.body.bookAuthor, req.body.bookName, req.body.bookQ, req.body.bookId)){
+        res.status(200).json({status: '200', message: `Book ${req.params.bookId} is successfully added`}) 
+    } else {
+        res.status(404).json({status: '404', message: 'Something went wrong while adding'})
     }
 })
 
