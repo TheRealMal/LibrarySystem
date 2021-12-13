@@ -1,8 +1,6 @@
 var session = require('express-session')
 var bodyParser = require('body-parser')
 var express = require('express')
-var https = require('https')
-var http = require('http')
 var path = require('path')
 var fs = require('fs')
 
