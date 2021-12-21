@@ -40,29 +40,24 @@ function hashArray(arr){
     return arr
 }
 
-function search(searchHashcode, category){
-    console.log(searchHashcode)
+function search(searchSub, category){
     const books = loadData(booksPath)
+    const searchSubHashcode = hashCode(searchSub)
+    const searchSubL = searchSub.length
     var result = []
     if (category !== "authors" && category !== "names")
         return []
     for (booksPart of books[category]){
-        let ifAppend = 0
-        if (searchHashcode.length > booksPart.hash.length)
-            continue
-        for (searchHashPart of searchHashcode){
-            for (booksHashPart of booksPart.hash){
-                if (booksHashPart == searchHashPart){
-                    ifAppend += 1
-                }
+        const bookname = booksPart.name
+        for (let i = 0; i <= bookname.length - searchSubL; i++){
+            let namePartHashcode = hashCode(bookname.substring(i, i+searchSubL))
+            if (namePartHashcode === searchSubHashcode){
+                if (category === "names")
+                    result.push(booksPart.id)
+                else 
+                    for (let i = 0; i < booksPart.books.length; ++i)
+                        result.push(booksPart.books[i])
             }
-        }
-        if (ifAppend === searchHashcode.length){
-            if (category === "names")
-                result.push(booksPart.id)
-            else 
-                for (let i = 0; i < booksPart.books.length; ++i)
-                    result.push(booksPart.books[i])
         }
     }
     return parseIds(result, books)
@@ -266,7 +261,7 @@ app.post('/books', (req, res) => {
     var searchType = req.query.type
     var result
     if (searchType === "names" || searchType === "authors")
-        result = search(req.body, searchType)
+        result = search(req.body.data, searchType)
     res.status(200).json({status: '200', data: result})
 })
 
