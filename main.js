@@ -26,41 +26,45 @@ function parseIds(arr, books){
     return arr
 }
 
-// Return all books with that part of name
-// Words order matters
-function searchByName(input){
-    const search = '/' + input.toLowerCase() + '/g'
-    const firstChar = input.charAt(0).toUpperCase()
-    const books = loadData(booksPath)
-    var result = []
-    Object.keys(books.names[firstChar]).forEach(key => {
-        if (key.match(eval(search)) !== null){
-            result.push(books.names[firstChar][key]["id"])
-        }
-    })
-    return parseIds(result, books)
+function hashCode(s){
+    var h = 0, l = s.length, i = 0;
+    if ( l > 0 )
+        while (i < l)
+            h = (h << 5) - h + s.charCodeAt(i++) | 0;
+    return h;
+};
+
+function hashArray(arr){
+    for (i of arr)
+        i = hashCode(i)
+    return arr
 }
 
-// Return all book written by that author
-// First name and Last name order doesn't matter
-function searchByAuthor(input){
-    const search = input.toLowerCase().split(' ')
-    const firstChar = input.charAt(0).toUpperCase()
+function search(searchHashcode, category){
+    console.log(searchHashcode)
     const books = loadData(booksPath)
     var result = []
-    Object.keys(books.authors[firstChar]).forEach(key => {
-        let resultAppend = true
-        for (part of search){
-            if (!key.includes(part)){
-                resultAppend = false
+    if (category !== "authors" && category !== "names")
+        return []
+    for (booksPart of books[category]){
+        let ifAppend = 0
+        if (searchHashcode.length > booksPart.hash.length)
+            continue
+        for (searchHashPart of searchHashcode){
+            for (booksHashPart of booksPart.hash){
+                if (booksHashPart == searchHashPart){
+                    ifAppend += 1
+                }
             }
         }
-        if (resultAppend){
-            for (let i = 0; i < books.authors[firstChar][key].length; ++i){
-                result.push(books.authors[firstChar][key][i]["id"])
-            }
+        if (ifAppend === searchHashcode.length){
+            if (category === "names")
+                result.push(booksPart.id)
+            else 
+                for (let i = 0; i < booksPart.books.length; ++i)
+                    result.push(booksPart.books[i])
         }
-    })
+    }
     return parseIds(result, books)
 }
 
@@ -84,38 +88,27 @@ function makeid(books){
 // Add new book to database
 function addBookToDB(author, name, quantity, bookId){
     var books = loadData(booksPath)
-    if (author === "" || name === "" || quantity === 0){
+    if (author === "" || name === "" || quantity === 0)
         return false
-    }
-    if (bookId === "undefined"){
-        bookdId = makeid(books)
-    }
-    // Add book to authors part
-    var firstCharsAuthor = author.split(' ')
-    var booksByAuthor = undefined
-    firstCharsAuthor.forEach(part => {
-        part = part.charAt(0).toUpperCase()
-        if (typeof books.authors[part][author.toLowerCase()] !== "undefined"){
-            booksByAuthor = books.authors[part][author.toLowerCase()]
+    if (bookId === "undefined")
+        bookId = makeid(books)
+
+    const authorHash = hashArray(author.split(" "))
+    const nameHash  = hashArray(name.split(" "))
+
+    let ifAppended = false
+    for (let i = 0; i < books.authors.length; ++i){
+        if (authorHash === books.authors[i].hash){
+            books.authors[i]["books"].push(bookId)
+            ifAppended = true
+            break
         }
-    })
-    if (typeof booksByAuthor === "undefined"){
-        firstCharsAuthor.forEach(letter => {
-            books.authors[letter.charAt(0).toUpperCase()][author.toLowerCase()] = []
-        })
     }
-    firstCharsAuthor.forEach(letter => {
-        books.authors[letter.charAt(0).toUpperCase()][author.toLowerCase()].push({"name":name, "id":bookId})
-    })
+    if (!ifAppended){
+        books.authors.push({"hash": authorHash, "books":[bookId]})
+    }
+    books.names.push({"hash": nameHash, "id": bookId})
 
-    // Add book to names part
-    var firstCharsName = `${name} ${author}`.split(' ')
-    firstCharsName.forEach(part => {
-        part = part.charAt(0).toUpperCase()
-        books.names[part][name.toLowerCase() + " " + author.toLowerCase()] = {"id":bookId}  
-    })
-
-    // Add book to ids part
     books.ids[bookId] = {
         "author": author,
         "name": name,
@@ -269,15 +262,11 @@ app.get('/admin', (req, res) => {
     res.status(200).sendFile(path.join(__dirname + '/private/admin.html'))
 })
 
-app.get('/books', (req, res) => {
-    var query = req.query.q
+app.post('/books', (req, res) => {
     var searchType = req.query.type
     var result
-    if (searchType === "name"){
-        result = searchByName(query)
-    } else if (searchType === "author"){
-        result = searchByAuthor(query)
-    }
+    if (searchType === "names" || searchType === "authors")
+        result = search(req.body, searchType)
     res.status(200).json({status: '200', data: result})
 })
 
