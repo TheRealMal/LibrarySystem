@@ -28,35 +28,33 @@ function parseIds(arr, books){
 
 function hashCode(s){
     var h = 0, l = s.length, i = 0;
-    if ( l > 0 )
+    if (l > 0)
         while (i < l)
             h = (h << 5) - h + s.charCodeAt(i++) | 0;
     return h;
 };
 
-function hashArray(arr){
-    for (i of arr)
-        i = hashCode(i)
-    return arr
-}
-
 function search(searchSub, category){
     const books = loadData(booksPath)
+    searchSub = searchSub.toLowerCase()
     const searchSubHashcode = hashCode(searchSub)
     const searchSubL = searchSub.length
     var result = []
     if (category !== "authors" && category !== "names")
         return []
     for (booksPart of books[category]){
-        const bookname = booksPart.name
+        const bookname = booksPart.name.toLowerCase()
         for (let i = 0; i <= bookname.length - searchSubL; i++){
-            let namePartHashcode = hashCode(bookname.substring(i, i+searchSubL))
+            let booknameSub = bookname.substring(i, i+searchSubL)
+            let namePartHashcode = hashCode(booknameSub)
             if (namePartHashcode === searchSubHashcode){
-                if (category === "names")
-                    result.push(booksPart.id)
-                else 
-                    for (let i = 0; i < booksPart.books.length; ++i)
-                        result.push(booksPart.books[i])
+                if (booknameSub === searchSub){
+                    if (category === "names")
+                        result.push(booksPart.id)
+                    else 
+                        for (let i = 0; i < booksPart.books.length; ++i)
+                            result.push(booksPart.books[i])
+                }
             }
         }
     }
@@ -88,21 +86,18 @@ function addBookToDB(author, name, quantity, bookId){
     if (bookId === "undefined")
         bookId = makeid(books)
 
-    const authorHash = hashArray(author.split(" "))
-    const nameHash  = hashArray(name.split(" "))
-
     let ifAppended = false
     for (let i = 0; i < books.authors.length; ++i){
-        if (authorHash === books.authors[i].hash){
+        if (author === books.authors[i].hash){
             books.authors[i]["books"].push(bookId)
             ifAppended = true
             break
         }
     }
     if (!ifAppended){
-        books.authors.push({"hash": authorHash, "books":[bookId]})
+        books.authors.push({"name": author, "books":[bookId]})
     }
-    books.names.push({"hash": nameHash, "id": bookId})
+    books.names.push({"name": name, "id": bookId})
 
     books.ids[bookId] = {
         "author": author,
