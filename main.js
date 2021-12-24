@@ -30,9 +30,16 @@ function hashCode(s){
     var h = 0, l = s.length, i = 0;
     if (l > 0)
         while (i < l)
-            h = (h << 5) - h + s.charCodeAt(i++) | 0;
+            h = (h << 5) + s.charCodeAt(i++) | 0;
     return h;
 };
+
+function rollingHashcode(prevH, prevCharCode, nextCharCode, length){
+    for (let i = 0; i < length-1; i++){
+        prevCharCode = (prevCharCode << 5)
+    }
+    return ((prevH - prevCharCode) << 5) + nextCharCode | 0;
+}
 
 function search(searchSub, category){
     const books = loadData(booksPath)
@@ -44,10 +51,21 @@ function search(searchSub, category){
         return []
     for (booksPart of books[category]){
         const bookname = booksPart.name.toLowerCase()
-        for (let i = 0; i <= bookname.length - searchSubL; i++){
-            let booknameSub = bookname.substring(i, i+searchSubL)
-            let namePartHashcode = hashCode(booknameSub)
+        let booknameSub = bookname.substring(0, searchSubL)
+        let namePartHashcode = hashCode(booknameSub)
+        if (namePartHashcode === searchSubHashcode){
+            if (booknameSub === searchSub){
+                if (category === "names")
+                    result.push(booksPart.id)
+                else 
+                    for (let i = 0; i < booksPart.books.length; ++i)
+                        result.push(booksPart.books[i])
+            }
+        }
+        for (let i = 1; i <= bookname.length - searchSubL; i++){
+            namePartHashcode = rollingHashcode(namePartHashcode, bookname.charCodeAt(i-1), bookname.charCodeAt(i+searchSubL-1), searchSubL)
             if (namePartHashcode === searchSubHashcode){
+                booknameSub = bookname.substring(i, i+searchSubL)
                 if (booknameSub === searchSub){
                     if (category === "names")
                         result.push(booksPart.id)
