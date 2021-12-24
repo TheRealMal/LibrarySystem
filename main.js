@@ -8,15 +8,19 @@ const booksPath = 'private/json/books.json';
 const customersPath = 'private/json/customers.json';
 const stuffPath = 'private/json/stuff.json';
 
+// Read .json files data
 function loadData(path){
     let rawdata = fs.readFileSync(path);
     return JSON.parse(rawdata);
 };
 
+// Update .json files data
 function writeData(path, data){
     fs.writeFileSync(path, JSON.stringify(data));
 };
 
+// IDs parser function
+// Returns array with books data
 function parseIds(arr, books){
     for (let i = 0; i < arr.length; ++i){
         let id = arr[i];
@@ -26,6 +30,8 @@ function parseIds(arr, books){
     return arr;
 };
 
+// String to hashcode function
+// Returns hashcode for string
 function hashCode(s){
     var h = 0, l = s.length, i = 0;
     if (l > 0)
@@ -34,6 +40,9 @@ function hashCode(s){
     return h;
 };
 
+// Rolling hashcode from previous hashcode function
+// Returns hashcode made from previous hashcode, previous
+// char code and next char code
 function rollingHashcode(prevH, prevCharCode, nextCharCode, length){
     for (let i = 0; i < length-1; i++){
         prevCharCode = (prevCharCode << 5);
@@ -41,6 +50,8 @@ function rollingHashcode(prevH, prevCharCode, nextCharCode, length){
     return ((prevH - prevCharCode) << 5) + nextCharCode | 0;
 };
 
+// Substring search function
+// Returns all books which match substring keyword
 function search(searchSub, category){
     const books = loadData(booksPath);
     searchSub = searchSub.toLowerCase();
@@ -79,6 +90,8 @@ function search(searchSub, category){
     return parseIds(result, books);
 };
 
+// Generate book ID
+// Returns unique ID
 function makeid(books){
     var result           = 'TRM-';
     var characters       = '0123456789';
@@ -97,6 +110,7 @@ function makeid(books){
 };
 
 // Add new book to database
+// Returns true if book was successfully added
 function addBookToDB(author, name, quantity, bookId){
     var books = loadData(booksPath);
     if (author === "" || name === "" || quantity === 0)
@@ -145,6 +159,7 @@ function searchCustomer(fio, customers){
 };
 
 // Take book and add it to customer backpack
+// Returns true if book was successfully taken
 function takeBook(bookId, fio){
     var customers = loadData(customersPath);
     var books = loadData(booksPath);
@@ -164,6 +179,7 @@ function takeBook(bookId, fio){
 };
 
 // Bring book back to database
+// Returns true if book was successfully returned
 function returnBook(bookId, fio){
     var customers = loadData(customersPath);
     var books = loadData(booksPath);
