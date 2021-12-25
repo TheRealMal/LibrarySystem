@@ -8,7 +8,7 @@ const booksPath = 'private/json/books.json';
 const customersPath = 'private/json/customers.json';
 const stuffPath = 'private/json/stuff.json';
 
-// Read .json files data
+// Reads .json files data
 function loadData(path){
     let rawdata = fs.readFileSync(path);
     return JSON.parse(rawdata);
@@ -202,9 +202,7 @@ function returnBook(bookId, fio){
 
 const app = express();
 
-app.set('views', path.join(__dirname+'/private/ejs'));
-app.set('view engine', 'ejs');
-
+// Session config
 app.use(session({
     secret: 'LibrarySystemSecretPhrase',
     cookie: {
@@ -214,10 +212,15 @@ app.use(session({
     saveUninitialized: false,
 }));
 
+// Set static path for images 
+// (These files can be accessed via /static/<FILENAME>)
 app.use('/static', express.static('static'));
+
+// Adds parsers for different body types
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.json());
 
+/* All API routes */
 app.get('/', (req, res) => {
     res.status(200).sendFile(path.join(__dirname + '/private/index.html'));
 });
@@ -346,6 +349,7 @@ app.use((req, res, next)=>{
     res.sendStatus(404);
 });
 
+// Start listening 8080 port
 app.listen(8080, () => {
     console.log(`Started server`);
 });
