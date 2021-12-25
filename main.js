@@ -103,7 +103,7 @@ function makeid(books){
     for (var i = 0; i < 10; i++ ){
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
-    if (books["ids"].includes(result)){ 
+    if (typeof books.ids[result] !== "undefined"){ 
         return makeid(books);
     }
     return result;
